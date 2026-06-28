@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Auth.Domain.Entities;
 
 namespace Auth.Application.Interfaces
@@ -6,5 +7,6 @@ namespace Auth.Application.Interfaces
     {
         string GenerateToken(User user, List<string> roles, int employeeId);
         string GenerateRefreshToken();
+        ClaimsPrincipal? GetPrincipalFromExpiredToken(string token);
     }
 }

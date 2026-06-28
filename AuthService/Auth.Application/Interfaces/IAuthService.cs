@@ -5,5 +5,7 @@ namespace Auth.Application.Interfaces
         Task<RegisterResponse> RegisterAsync(RegisterRequest request);
 
         Task<LoginResponse> LoginAsync(LoginRequest request);
+
+        Task<LoginResponse> RefreshAsync(RefreshRequest request);
     }
 }

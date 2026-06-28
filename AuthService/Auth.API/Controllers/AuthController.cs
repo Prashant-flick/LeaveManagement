@@ -60,5 +60,17 @@ namespace Auth.API.Controllers
 
             return Ok(response);
         }
+
+        [HttpPost("refresh")]
+        public async Task<IActionResult> Refresh([FromBody] RefreshRequest request)
+        {
+            _logger.LogInformation("Refresh token request received");
+
+            var response = await _authService.RefreshAsync(request);
+
+            _logger.LogInformation("Token refreshed successfully");
+
+            return Ok(response);
+        }
     }
 }

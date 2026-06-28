@@ -1,0 +1,58 @@
+## Ignore Visual Studio / MSBuild / dotnet build artifacts
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+x64/
+x86/
+[Aa]rm/
+[Aa]rm64/
+bbin/
+bin/
+obj/
+_ReSharper*/
+[Tt]emp/
+[Tt]mp/
+
+## Ignore User-specific files
+*.rsuser
+*.suo
+*.user
+*.userpreflight
+*.userosscache
+*.sln.docstates
+
+## Ignore IDE specific files
+.vs/
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln.ghost.suo
+
+## Ignore OS-generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+## Ignore Logs and crash dumps
+*.log
+[Ll]og/
+[Ll]ogs/
+*.crash
+
+## Ignore local environment settings / user secrets
+*.user
+appsettings.local.json
+.env
+.env.*
+secrets.json
+
+## Ignore Publish output
+publish/
+**/[bin|obj]/publish/

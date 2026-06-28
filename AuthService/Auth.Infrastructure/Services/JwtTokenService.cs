@@ -95,4 +95,44 @@ public class JwtTokenService : IJwtTokenService
 
         return Convert.ToBase64String(random);
     }
+
+    public ClaimsPrincipal? GetPrincipalFromExpiredToken(string token)
+    {
+        var keyString = _config["Jwt:Key"];
+        if (string.IsNullOrEmpty(keyString))
+            throw new Exception("JWT Key is missing in configuration");
+
+        var tokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateAudience = true,
+            ValidateIssuer = true,
+            ValidateIssuerSigningKey = true,
+            ValidAudience = _config["Jwt:Audience"],
+            ValidIssuer = _config["Jwt:Issuer"],
+            IssuerSigningKey = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(keyString)
+            ),
+            ValidateLifetime = false // Disable lifetime validation to read expired token claims
+        };
+
+        var tokenHandler = new JwtSecurityTokenHandler();
+        try
+        {
+            var principal = tokenHandler.ValidateToken(token, tokenValidationParameters, out SecurityToken securityToken);
+            
+            if (securityToken is not JwtSecurityToken jwtSecurityToken || 
+                !jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase))
+            {
+                _logger.LogWarning("Invalid security token algorithm or type.");
+                return null;
+            }
+
+            return principal;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Error validating expired token");
+            return null;
+        }
+    }
 }

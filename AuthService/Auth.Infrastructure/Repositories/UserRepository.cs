@@ -19,6 +19,16 @@ namespace Auth.Infrastructure.Repository
             _logger = logger;
         }
 
+        public async Task<User?> GetByIdAsync(int id)
+        {
+            _logger.LogInformation(
+                "Fetching user by Id: {UserId}",
+                id);
+
+            return await _context.Users
+                .FirstOrDefaultAsync(u => u.Id == id);
+        }
+
         public async Task<User?> GetByEmailAsync(string email)
         {
             _logger.LogInformation(
