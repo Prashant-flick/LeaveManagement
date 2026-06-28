@@ -1,0 +1,110 @@
+using Auth.Application.Interfaces;
+using Auth.Infrastructure.Data;
+using Auth.Infrastructure.Services;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+using Auth.Domain.Interfaces;
+using Auth.Infrastructure.Repository;
+using FluentValidation.AspNetCore;
+using FluentValidation;
+using Microsoft.AspNetCore.Mvc;
+using Auth.Domain.Common.Interfaces;
+using Auth.API.Common.Middleware;
+using Auth.Application.Validators;
+
+var builder = WebApplication.CreateBuilder(args);
+
+// ✅ Add Controllers (IMPORTANT)
+builder.Services.AddControllers();
+
+// ✅ Swagger
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
+
+// ✅ AUTH SERVICE (YOU MUST ADD THIS)
+builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+builder.Services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
+
+// Add validators
+builder.Services.AddFluentValidationAutoValidation();
+builder.Services.AddValidatorsFromAssemblyContaining<LoginRequestValidator>();
+
+// for better error response for validators
+builder.Services.Configure<ApiBehaviorOptions>(options =>
+{
+    options.InvalidModelStateResponseFactory = context =>
+    {
+        var errors = context.ModelState
+            .ToDictionary(
+                x => x.Key,
+                x => x.Value?.Errors.Select(e => e.ErrorMessage)
+            );
+
+        return new BadRequestObjectResult(new
+        {
+            message = "Validation failed",
+            errors
+        });
+    };
+});
+
+// ✅ JWT Authentication
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+
+        ValidIssuer = builder.Configuration["Jwt:Issuer"],
+        ValidAudience = builder.Configuration["Jwt:Audience"],
+
+        IssuerSigningKey = new SymmetricSecurityKey(
+            Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"])
+        )
+    };
+});
+
+// adding client
+builder.Services.AddHttpClient<IEmployeeClient, EmployeeClient>(client =>
+{
+    client.BaseAddress = new Uri("http://localhost:5001");
+}); 
+
+// ✅ Authorization
+builder.Services.AddAuthorization();
+
+var app = builder.Build();
+
+// ✅ Swagger
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
+
+app.UseMiddleware<ExceptionMiddleware>();
+// ✅ MIDDLEWARE ORDER (VERY IMPORTANT 🔥)
+app.UseAuthentication();
+app.UseAuthorization();
+
+// ✅ Map Controllers (THIS IS WHAT YOU ASKED ✅)
+app.MapControllers();
+
+app.Run();
