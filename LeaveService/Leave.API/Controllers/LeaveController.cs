@@ -21,6 +21,7 @@ public class LeaveController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Roles = "Employee,Manager,Admin")]
     public async Task<IActionResult> Create(CreateLeaveRequest request)
     {
         var employeeId = User.GetEmployeeId();
@@ -51,6 +52,7 @@ public class LeaveController : ControllerBase
     }
 
     [HttpGet("my")]
+    [Authorize(Roles = "Employee,Manager,Admin")]
     public async Task<IActionResult> MyLeaves()
     {
         var employeeId = User.GetEmployeeId();

@@ -47,7 +47,7 @@ public class LeaveBalanceController : ControllerBase
     }
 
     [HttpGet("my")]
-    [Authorize]
+    [Authorize(Roles = "Employee,Manager,Admin")]
     public async Task<IActionResult> GetMyBalance()
     {
         var employeeId = User.GetEmployeeId();

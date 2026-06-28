@@ -15,6 +15,7 @@ using Auth.API.Common.Middleware;
 using Auth.Application.Validators;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Configuration.AddJsonFile("appsettings.local.json", optional: true, reloadOnChange: true);
 
 // ✅ Add Controllers (IMPORTANT)
 builder.Services.AddControllers();
@@ -24,7 +25,10 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseNpgsql(
+        builder.Configuration.GetConnectionString("DefaultConnection"),
+        x => x.MigrationsHistoryTable("__EFMigrationsHistory", "auth")
+    ));
 
 builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
 
@@ -91,6 +95,47 @@ builder.Services.AddHttpClient<IEmployeeClient, EmployeeClient>(client =>
 builder.Services.AddAuthorization();
 
 var app = builder.Build();
+
+// Database Initialization Strategy
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    var logger = services.GetRequiredService<ILogger<Program>>();
+    var dbContext = services.GetRequiredService<ApplicationDbContext>();
+    var initStrategy = builder.Configuration["DatabaseSettings:InitStrategy"] ?? "None";
+
+    try
+    {
+        if (initStrategy.Equals("Recreate", StringComparison.OrdinalIgnoreCase))
+        {
+            logger.LogInformation("InitStrategy is 'Recreate'. Dropping schema 'auth'...");
+            await dbContext.Database.ExecuteSqlRawAsync("DROP SCHEMA IF EXISTS auth CASCADE;");
+            await dbContext.Database.ExecuteSqlRawAsync("CREATE SCHEMA auth;");
+            
+            logger.LogInformation("Applying migrations to recreate schema...");
+            await dbContext.Database.MigrateAsync();
+            
+            logger.LogInformation("Seeding default data...");
+            await AuthDataSeeder.SeedAdminUserAsync(dbContext, logger);
+        }
+        else if (initStrategy.Equals("Update", StringComparison.OrdinalIgnoreCase))
+        {
+            logger.LogInformation("InitStrategy is 'Update'. Applying pending migrations...");
+            await dbContext.Database.MigrateAsync();
+            
+            logger.LogInformation("Seeding default data...");
+            await AuthDataSeeder.SeedAdminUserAsync(dbContext, logger);
+        }
+        else
+        {
+            logger.LogInformation("InitStrategy is '{Strategy}'. Skipping database initialization.", initStrategy);
+        }
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "An error occurred during database initialization.");
+    }
+}
 
 // ✅ Swagger
 if (app.Environment.IsDevelopment())

@@ -34,10 +34,14 @@ public class EmployeeClient : IEmployeeClient
             if (response.StatusCode == HttpStatusCode.NotFound)
             {
                 _logger.LogWarning(
-                    "Employee not found in EmployeeService for UserId: {UserId}",
+                    "Employee not found in EmployeeService for UserId: {UserId}. Falling back to default role 'User'.",
                     userId);
 
-                throw new NotFoundException("Employee not found");
+                return new UserRoleResponse
+                {
+                    EmployeeId = 0,
+                    Roles = new List<string> { "User" }
+                };
             }
 
             if (!response.IsSuccessStatusCode)

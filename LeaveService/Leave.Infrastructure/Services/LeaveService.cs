@@ -1,5 +1,6 @@
 using Leave.Application.DTOs;
 using Leave.Application.Interfaces;
+using Leave.Application.Common.Exceptions;
 using Leave.Domain.Entities;
 using Leave.Domain.Enums;
 using Leave.Domain.Interfaces;
@@ -26,14 +27,14 @@ public class LeaveService : ILeaveService
     {
         _logger.LogInformation("Creating leave for EmployeeId: {EmployeeId}", request.EmployeeId);
         if (request.EndDate < request.StartDate)
-            throw new ArgumentException("End date cannot be before start date");
+            throw new BadRequestException("End date cannot be before start date");
 
         var currentYear = DateTime.UtcNow.Year;
 
         var balance = await _repository.GetBalanceAsync(request.EmployeeId, currentYear);
 
         if (balance == null)
-            throw new InvalidOperationException("Leave balance not found");
+            throw new BadRequestException("Leave balance not found");
 
         int days = (request.EndDate - request.StartDate).Days + 1;
         _logger.LogInformation("Remaining Leaves {} and days {}", balance.RemainingLeaves, days);   
@@ -63,7 +64,7 @@ public class LeaveService : ILeaveService
                 balance.TotalLeaves
             );
 
-            throw new InvalidOperationException("Insufficient leave balance");
+            throw new BadRequestException("Insufficient leave balance");
         }
 
         var leave = new LeaveRequest
@@ -106,14 +107,14 @@ public class LeaveService : ILeaveService
         var balance = await _repository.GetBalanceAsync(leave.EmployeeId, currentYear);
 
         if (balance == null)
-            throw new InvalidOperationException("Leave balance missing");
+            throw new BadRequestException("Leave balance missing");
 
         if (leave.Status != LeaveStatus.Pending)
-            throw new InvalidOperationException("Leave already processed");
+            throw new BadRequestException("Leave already processed");
         
         if (leave.EmployeeId == approverId) {
             _logger.LogWarning("Unauthorized approval attempt by EmployeeId: {EmployeeId}", approverId);
-            throw new UnauthorizedAccessException("Employees cannot approve their own leave");
+            throw new UnauthorizedException("Employees cannot approve their own leave");
         }
 
         if (!isAdmin)
@@ -122,10 +123,10 @@ public class LeaveService : ILeaveService
 
             _logger.LogInformation("managerId is {}", managerId);
             if (managerId == null)
-                    throw new InvalidOperationException("Manager not assigned");
+                    throw new BadRequestException("Manager not assigned");
 
             if (managerId != approverId)
-                throw new UnauthorizedAccessException("Only reporting manager can approve leave");
+                throw new UnauthorizedException("Only reporting manager can approve leave");
         }
 
         int days = (leave.EndDate - leave.StartDate).Days + 1;
@@ -133,7 +134,7 @@ public class LeaveService : ILeaveService
         if (Action)
         {
             if (balance.RemainingLeaves < days)
-                throw new InvalidOperationException("Insufficient balance");
+                throw new BadRequestException("Insufficient balance");
 
             leave.Status = LeaveStatus.Approved;
             leave.ProcessedBy = approverId;

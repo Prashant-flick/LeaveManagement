@@ -15,6 +15,7 @@ using Employee.Application.Validators;
 using Employee.API.Common.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Configuration.AddJsonFile("appsettings.local.json", optional: true, reloadOnChange: true);
 
 // Add services to the container.
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
@@ -26,7 +27,10 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseNpgsql(
+        builder.Configuration.GetConnectionString("DefaultConnection"),
+        x => x.MigrationsHistoryTable("__EFMigrationsHistory", "employee")
+    ));
 
 builder.Services.AddScoped<IEmployeeService,EmployeeService>();
 builder.Services.AddScoped<IEmployeeRepository,EmployeeRepository>();
@@ -84,13 +88,45 @@ builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
+// Database Initialization Strategy
 using (var scope = app.Services.CreateScope())
 {
-    var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    var logger = scope.ServiceProvider
-        .GetRequiredService<ILogger<Program>>();
+    var services = scope.ServiceProvider;
+    var logger = services.GetRequiredService<ILogger<Program>>();
+    var dbContext = services.GetRequiredService<ApplicationDbContext>();
+    var initStrategy = builder.Configuration["DatabaseSettings:InitStrategy"] ?? "None";
 
-    await DataSeeder.SeedRolesAsync(context, logger);
+    try
+    {
+        if (initStrategy.Equals("Recreate", StringComparison.OrdinalIgnoreCase))
+        {
+            logger.LogInformation("InitStrategy is 'Recreate'. Dropping schema 'employee'...");
+            await dbContext.Database.ExecuteSqlRawAsync("DROP SCHEMA IF EXISTS employee CASCADE;");
+            await dbContext.Database.ExecuteSqlRawAsync("CREATE SCHEMA employee;");
+            
+            logger.LogInformation("Applying migrations to recreate schema...");
+            await dbContext.Database.MigrateAsync();
+            
+            logger.LogInformation("Seeding default data...");
+            await DataSeeder.SeedRolesAndAdminAsync(dbContext, logger);
+        }
+        else if (initStrategy.Equals("Update", StringComparison.OrdinalIgnoreCase))
+        {
+            logger.LogInformation("InitStrategy is 'Update'. Applying pending migrations...");
+            await dbContext.Database.MigrateAsync();
+            
+            logger.LogInformation("Seeding default data...");
+            await DataSeeder.SeedRolesAndAdminAsync(dbContext, logger);
+        }
+        else
+        {
+            logger.LogInformation("InitStrategy is '{Strategy}'. Skipping database initialization.", initStrategy);
+        }
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "An error occurred during database initialization.");
+    }
 }
 
 // Configure the HTTP request pipeline.

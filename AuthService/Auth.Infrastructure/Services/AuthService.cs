@@ -127,33 +127,10 @@ namespace Auth.Infrastructure.Services
         {
             _logger.LogInformation("Refresh token attempt.");
 
-            var principal = _jwtService.GetPrincipalFromExpiredToken(request.Token);
-            if (principal == null)
-            {
-                _logger.LogWarning("Invalid access token provided for refresh");
-                throw new UnauthorizedException("Invalid access token");
-            }
-
-            var userIdClaim = principal.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier);
-            if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out var userId))
-            {
-                _logger.LogWarning("UserId claim is missing or invalid in the expired access token");
-                throw new UnauthorizedException("Invalid access token claims");
-            }
-
             var savedRefreshToken = await _refreshTokenRepository.GetRefreshTokenAsync(request.RefreshToken);
             if (savedRefreshToken == null)
             {
                 _logger.LogWarning("Refresh token not found in database");
-                throw new UnauthorizedException("Invalid refresh token");
-            }
-
-            if (savedRefreshToken.UserId != userId)
-            {
-                _logger.LogWarning(
-                    "Refresh token user ID {SavedUserId} does not match the access token user ID {UserId}",
-                    savedRefreshToken.UserId,
-                    userId);
                 throw new UnauthorizedException("Invalid refresh token");
             }
 
@@ -169,6 +146,7 @@ namespace Auth.Infrastructure.Services
                 throw new UnauthorizedException("Refresh token has expired");
             }
 
+            var userId = savedRefreshToken.UserId;
             var user = await _userRepository.GetByIdAsync(userId);
             if (user == null)
             {

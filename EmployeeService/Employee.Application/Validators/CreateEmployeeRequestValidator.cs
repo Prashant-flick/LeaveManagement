@@ -23,13 +23,9 @@ public class CreateEmployeeRequestValidator : AbstractValidator<CreateEmployeeRe
             .NotEmpty()
             .MaximumLength(100);
 
-        RuleFor(x => x.RoleIds)
-            .NotNull()
-            .Must(r => r.Any())
-            .WithMessage("At least one role must be assigned");
-
         RuleForEach(x => x.RoleIds)
             .GreaterThan(0)
+            .When(x => x.RoleIds != null)
             .WithMessage("Invalid role id");
 
         RuleFor(x => x.ManagerId)

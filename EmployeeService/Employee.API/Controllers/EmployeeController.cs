@@ -22,6 +22,7 @@ namespace Employee.API.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Create(CreateEmployeeRequest request)
         {
             _logger.LogInformation(
@@ -68,6 +69,7 @@ namespace Employee.API.Controllers
         }
 
         [HttpPut("{id}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Update(int id, UpdateEmployeeRequest request)
         {
             _logger.LogInformation("Updating employee with Id: {EmployeeId}", id);
@@ -89,6 +91,7 @@ namespace Employee.API.Controllers
         }
 
         [HttpDelete("{id}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(int id)
         {
             _logger.LogInformation("Deleting employee with Id: {EmployeeId}", id);

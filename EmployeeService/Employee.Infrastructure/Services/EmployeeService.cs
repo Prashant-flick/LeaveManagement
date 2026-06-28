@@ -47,6 +47,7 @@ namespace Employee.Infrastructure.Services
                 FirstName = request.FirstName,
                 LastName = request.LastName,
                 Department = request.Department,
+                ManagerId = request.ManagerId,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow,
                 IsActive = true
@@ -54,13 +55,17 @@ namespace Employee.Infrastructure.Services
 
             await _repository.AddAsync(employee);
 
-            var roles = request.RoleIds.Select(roleId => new EmployeeRole
+            if (request.RoleIds != null && request.RoleIds.Any())
             {
-                EmployeeId = employee.Id,
-                RoleId = roleId
-            });
+                var roles = request.RoleIds.Select(roleId => new EmployeeRole
+                {
+                    EmployeeId = employee.Id,
+                    RoleId = roleId
+                });
 
-            await _repository.AddEmployeeRolesAsync(roles);
+                await _repository.AddEmployeeRolesAsync(roles);
+            }
+
             await _unitOfWork.SaveChangesAsync();
 
             _logger.LogInformation(
@@ -83,6 +88,8 @@ namespace Employee.Infrastructure.Services
                 FirstName = e.FirstName,
                 LastName = e.LastName,
                 Department = e.Department,
+                IsActive = e.IsActive,
+                ManagerId = e.ManagerId,
                 Roles = e.EmployeeRoles?
                     .Select(r => r.Role?.Name ?? "")
                     .ToList() ?? new List<string>()
@@ -111,10 +118,11 @@ namespace Employee.Infrastructure.Services
                 FirstName = e.FirstName,
                 LastName = e.LastName,
                 Department = e.Department,
+                IsActive = e.IsActive,
+                ManagerId = e.ManagerId,
                 Roles = e.EmployeeRoles?
                     .Select(r => r.Role?.Name ?? "")
-                    .ToList() ?? new List<string>(),
-                ManagerId = e.ManagerId
+                    .ToList() ?? new List<string>()
             };
         }
 
