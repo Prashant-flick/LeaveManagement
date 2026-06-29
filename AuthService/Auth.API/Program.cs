@@ -32,8 +32,11 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 
 builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
 
-// ✅ AUTH SERVICE (YOU MUST ADD THIS)
-builder.Services.AddScoped<IAuthService, AuthService>();
+// Register MediatR
+builder.Services.AddMediatR(cfg => {
+    cfg.RegisterServicesFromAssembly(typeof(Auth.Application.Features.Auth.Commands.RegisterCommand).Assembly);
+});
+
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();

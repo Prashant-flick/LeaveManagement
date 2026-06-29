@@ -1,7 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
-using Auth.Application.Interfaces;
+using MediatR;
+using Auth.Application.Features.Auth.Commands;
 
 namespace Auth.API.Controllers
 {
@@ -9,12 +10,12 @@ namespace Auth.API.Controllers
     [Route("api/[controller]")]
     public class AuthController : ControllerBase
     {
-        private readonly IAuthService _authService;
+        private readonly IMediator _mediator;
         private readonly ILogger<AuthController> _logger;
 
-        public AuthController(IAuthService authService, ILogger<AuthController> logger)
+        public AuthController(IMediator mediator, ILogger<AuthController> logger)
         {
-            _authService = authService;
+            _mediator = mediator;
             _logger = logger;
         }
 
@@ -23,7 +24,7 @@ namespace Auth.API.Controllers
         {
             _logger.LogInformation("Register request received for Email: {Email}", request.Email);
 
-            var response = await _authService.RegisterAsync(request);
+            var response = await _mediator.Send(new RegisterCommand(request.Email, request.Password));
 
             _logger.LogInformation("User registered successfully for Email: {Email}", request.Email);
 
@@ -35,7 +36,7 @@ namespace Auth.API.Controllers
         {
             _logger.LogInformation("Login attempt for Email: {Email}", request.Email);
 
-            var response = await _authService.LoginAsync(request);
+            var response = await _mediator.Send(new LoginCommand(request.Email, request.Password));
 
             _logger.LogInformation("Login successful for Email: {Email}", request.Email);
 
@@ -66,7 +67,7 @@ namespace Auth.API.Controllers
         {
             _logger.LogInformation("Refresh token request received");
 
-            var response = await _authService.RefreshAsync(request);
+            var response = await _mediator.Send(new RefreshCommand(request.RefreshToken));
 
             _logger.LogInformation("Token refreshed successfully");
 
