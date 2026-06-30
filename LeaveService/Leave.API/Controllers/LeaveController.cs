@@ -1,8 +1,12 @@
 using Leave.API.Extensions;
 using Leave.Application.DTOs;
-using Leave.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using MediatR;
+using Leave.Application.Features.Leaves.Commands.CreateLeave;
+using Leave.Application.Features.Leaves.Commands.UpdateLeaveStatus;
+using Leave.Application.Features.Leaves.Queries.GetAllLeaves;
+using Leave.Application.Features.Leaves.Queries.GetLeavesByEmployee;
 
 namespace Leave.API.Controllers;
 
@@ -11,12 +15,12 @@ namespace Leave.API.Controllers;
 [Route("api/[controller]")]
 public class LeaveController : ControllerBase
 {
-    private readonly ILeaveService _service;
+    private readonly IMediator _mediator;
     private readonly ILogger<LeaveController> _logger;
 
-    public LeaveController(ILeaveService service, ILogger<LeaveController> logger)
+    public LeaveController(IMediator mediator, ILogger<LeaveController> logger)
     {
-        _service = service;
+        _mediator = mediator;
         _logger = logger;
     }
 
@@ -31,24 +35,17 @@ public class LeaveController : ControllerBase
 
         request.EmployeeId = employeeId;
 
-        try
-        {
-            var result = await _service.CreateLeaveAsync(request);
+        var result = await _mediator.Send(new CreateLeaveCommand(
+            employeeId,
+            request.StartDate,
+            request.EndDate,
+            request.Reason
+        ));
 
-            _logger.LogInformation(
-                "Leave created successfully for EmployeeId: {EmployeeId}", employeeId);
+        _logger.LogInformation(
+            "Leave created successfully for EmployeeId: {EmployeeId}", employeeId);
 
-            return Ok(result);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(
-                ex,
-                "Error while creating leave for EmployeeId: {EmployeeId}",
-                employeeId);
-
-            throw; // Let global handler manage response
-        }
+        return Ok(result);
     }
 
     [HttpGet("my")]
@@ -60,25 +57,13 @@ public class LeaveController : ControllerBase
         _logger.LogInformation(
             "Fetching leave requests for EmployeeId: {EmployeeId}", employeeId);
 
-        try
-        {
-            var result = await _service.GetLeavesByEmployeeAsync(employeeId);
+        var result = await _mediator.Send(new GetLeavesByEmployeeQuery(employeeId));
 
-            _logger.LogInformation(
-                "Fetched {Count} leave requests for EmployeeId: {EmployeeId}",
-                result.Count, employeeId);
+        _logger.LogInformation(
+            "Fetched {Count} leave requests for EmployeeId: {EmployeeId}",
+            result.Count, employeeId);
 
-            return Ok(result);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(
-                ex,
-                "Error while fetching leaves for EmployeeId: {EmployeeId}",
-                employeeId);
-
-            throw;
-        }
+        return Ok(result);
     }
 
     [HttpGet]
@@ -87,21 +72,13 @@ public class LeaveController : ControllerBase
     {
         _logger.LogInformation("Fetching all leave requests (Admin/Manager access)");
 
-        try
-        {
-            var result = await _service.GetAllLeavesAsync();
+        var result = await _mediator.Send(new GetAllLeavesQuery());
 
-            _logger.LogInformation(
-                "Fetched {Count} total leave requests",
-                result.Count);
+        _logger.LogInformation(
+            "Fetched {Count} total leave requests",
+            result.Count);
 
-            return Ok(result);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error while fetching all leave requests");
-            throw;
-        }
+        return Ok(result);
     }
 
     [HttpPut("{id}/approve")]
@@ -115,42 +92,13 @@ public class LeaveController : ControllerBase
             "Approval request received for LeaveId: {LeaveId} by approverId: {approverId}",
             id, approverId);
 
-        try
-        {
-            var result = await _service.UpdateLeaveStatusAsync(id, approverId, isAdmin, true);
+        var result = await _mediator.Send(new UpdateLeaveStatusCommand(id, approverId, isAdmin, true));
 
-            if (result == null)
-            {
-                _logger.LogWarning(
-                    "Leave request not found for LeaveId: {LeaveId}", id);
+        _logger.LogInformation(
+            "LeaveId: {LeaveId} processed by ManagerId: {ManagerId}",
+            id, approverId);
 
-                return NotFound();
-            }
-
-            _logger.LogInformation(
-                "LeaveId: {LeaveId} processed by ManagerId: {ManagerId}",
-                id, approverId);
-
-            return Ok(result);
-        }
-        catch (UnauthorizedAccessException ex)
-        {
-            _logger.LogWarning(
-                ex,
-                "Unauthorized approval attempt for LeaveId: {LeaveId} by EmployeeId: {EmployeeId}",
-                id, approverId);
-
-            throw;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(
-                ex,
-                "Error while approving leave for LeaveId: {LeaveId}",
-                id);
-
-            throw;
-        }
+        return Ok(result);
     }
 
     [HttpPut("{id}/reject")]
@@ -164,41 +112,12 @@ public class LeaveController : ControllerBase
             "Reject request received for LeaveId: {LeaveId} by approverId: {approverId}",
             id, approverId);
 
-        try
-        {
-            var result = await _service.UpdateLeaveStatusAsync(id, approverId, isAdmin, false);
+        var result = await _mediator.Send(new UpdateLeaveStatusCommand(id, approverId, isAdmin, false));
 
-            if (result == null)
-            {
-                _logger.LogWarning(
-                    "Leave request not found for LeaveId: {LeaveId}", id);
+        _logger.LogInformation(
+            "LeaveId: {LeaveId} processed by approverId: {approverId}",
+            id, approverId);
 
-                return NotFound();
-            }
-
-            _logger.LogInformation(
-                "LeaveId: {LeaveId} processed by approverId: {approverId}",
-                id, approverId);
-
-            return Ok(result);
-        }
-        catch (UnauthorizedAccessException ex)
-        {
-            _logger.LogWarning(
-                ex,
-                "Unauthorized approval attempt for LeaveId: {LeaveId} by EmployeeId: {EmployeeId}",
-                id, approverId);
-
-            throw;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(
-                ex,
-                "Error while approving leave for LeaveId: {LeaveId}",
-                id);
-
-            throw;
-        }
+        return Ok(result);
     }
 }

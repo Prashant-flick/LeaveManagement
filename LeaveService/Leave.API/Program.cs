@@ -1,17 +1,15 @@
 using Leave.Infrastructure.Data;
 using Leave.Infrastructure.Repositories;
-using Leave.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
-using Leave.Application.Interfaces;
 using FluentValidation;
-using FluentValidation.AspNetCore;
 using Serilog;
 using Leave.Domain.Interfaces;
-using Leave.Application.Validators;
 using Leave.API.Common.Middleware;
+using Leave.Application.Interfaces;
+using Leave.Infrastructure.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Configuration.AddJsonFile("appsettings.local.json", optional: true, reloadOnChange: true);
@@ -27,16 +25,19 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     ));
 
 builder.Services.AddScoped<ILeaveRepository, LeaveRepository>();
-builder.Services.AddScoped<ILeaveService, LeaveService>();
-builder.Services.AddScoped<ILeaveBalanceService, LeaveBalanceService>();
 builder.Services.AddScoped<IEmployeeClient, EmployeeClient>();
+
+// Register MediatR
+builder.Services.AddMediatR(cfg => {
+    cfg.RegisterServicesFromAssembly(typeof(Leave.Application.Features.Leaves.Commands.CreateLeave.CreateLeaveCommand).Assembly);
+    cfg.AddOpenBehavior(typeof(Leave.Application.Common.Behaviors.LoggingBehavior<,>));
+    cfg.AddOpenBehavior(typeof(Leave.Application.Common.Behaviors.ValidationBehavior<,>));
+});
 
 builder.Services.AddControllers();
 
-builder.Services.AddFluentValidationAutoValidation();
-builder.Services.AddValidatorsFromAssembly(
-    typeof(CreateLeaveBalanceRequestValidator).Assembly
-);
+// Add validators
+builder.Services.AddValidatorsFromAssembly(typeof(Leave.Application.Features.Leaves.Commands.CreateLeave.CreateLeaveCommand).Assembly);
 
 builder.Services.AddAuthentication(options =>
 {

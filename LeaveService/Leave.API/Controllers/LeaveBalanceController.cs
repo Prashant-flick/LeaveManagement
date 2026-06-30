@@ -1,8 +1,10 @@
 using Leave.API.Extensions;
 using Leave.Application.DTOs;
-using Leave.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using MediatR;
+using Leave.Application.Features.LeaveBalances.Commands.CreateLeaveBalance;
+using Leave.Application.Features.LeaveBalances.Queries.GetLeaveBalanceByEmployee;
 
 namespace Leave.API.Controllers;
 
@@ -10,14 +12,14 @@ namespace Leave.API.Controllers;
 [Route("api/[controller]")]
 public class LeaveBalanceController : ControllerBase
 {
-    private readonly ILeaveBalanceService _service;
+    private readonly IMediator _mediator;
     private readonly ILogger<LeaveBalanceController> _logger;
 
     public LeaveBalanceController(
-        ILeaveBalanceService service,
+        IMediator mediator,
         ILogger<LeaveBalanceController> logger)
     {
-        _service = service;
+        _mediator = mediator;
         _logger = logger;
     }
 
@@ -29,21 +31,13 @@ public class LeaveBalanceController : ControllerBase
             "Received request to create leave balance for EmployeeId: {EmployeeId}",
             request.EmployeeId);
 
-        try
-        {
-            var result = await _service.CreateBalanceAsync(request);
+        var result = await _mediator.Send(new CreateLeaveBalanceCommand(
+            request.EmployeeId,
+            request.TotalLeaves,
+            request.Year
+        ));
 
-            return Ok(result);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(
-                ex,
-                "Error while creating leave balance for EmployeeId: {EmployeeId}",
-                request.EmployeeId);
-
-            throw;
-        }
+        return Ok(result);
     }
 
     [HttpGet("my")]
@@ -56,7 +50,7 @@ public class LeaveBalanceController : ControllerBase
             "Fetching leave balance for EmployeeId: {EmployeeId}",
             employeeId);
 
-        var result = await _service.GetBalanceByEmployeeIdAsync(employeeId);
+        var result = await _mediator.Send(new GetLeaveBalanceByEmployeeQuery(employeeId));
 
         if (result == null)
             return NotFound();
@@ -72,7 +66,7 @@ public class LeaveBalanceController : ControllerBase
             "Fetching leave balance for EmployeeId: {EmployeeId}",
             employeeId);
 
-        var result = await _service.GetBalanceByEmployeeIdAsync(employeeId);
+        var result = await _mediator.Send(new GetLeaveBalanceByEmployeeQuery(employeeId));
 
         if (result == null)
             return NotFound();
