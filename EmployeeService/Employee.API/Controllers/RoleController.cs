@@ -1,6 +1,8 @@
-using Employee.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using MediatR;
+using Employee.Application.Features.Roles.Commands.CreateRole;
+using Employee.Application.Features.Roles.Queries.GetAllRoles;
 
 namespace Employee.API.Controllers;
 
@@ -9,14 +11,14 @@ namespace Employee.API.Controllers;
 [Authorize(Roles = "Admin")]
 public class RoleController : ControllerBase
 {
-    private readonly IRoleService _service;
+    private readonly IMediator _mediator;
     private readonly ILogger<RoleController> _logger;
 
     public RoleController(
-        IRoleService service,
+        IMediator mediator,
         ILogger<RoleController> logger)
     {
-        _service = service;
+        _mediator = mediator;
         _logger = logger;
     }
 
@@ -27,7 +29,7 @@ public class RoleController : ControllerBase
             "Received request to create role: {RoleName}",
             name);
 
-        var result = await _service.CreateRoleAsync(name);
+        var result = await _mediator.Send(new CreateRoleCommand(name));
 
         _logger.LogInformation(
             "Role created successfully: {RoleName}",
@@ -41,7 +43,7 @@ public class RoleController : ControllerBase
     {
         _logger.LogInformation("Fetching all roles");
 
-        var roles = await _service.GetAllRolesAsync();
+        var roles = await _mediator.Send(new GetAllRolesQuery());
 
         return Ok(roles);
     }

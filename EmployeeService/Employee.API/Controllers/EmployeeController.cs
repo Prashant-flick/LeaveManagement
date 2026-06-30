@@ -1,7 +1,13 @@
 using Employee.Application.DTOs;
-using Employee.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using MediatR;
+using Employee.Application.Features.Employees.Commands.CreateEmployee;
+using Employee.Application.Features.Employees.Commands.DeleteEmployee;
+using Employee.Application.Features.Employees.Commands.UpdateEmployee;
+using Employee.Application.Features.Employees.Queries.GetEmployeeById;
+using Employee.Application.Features.Employees.Queries.GetEmployees;
+using Employee.Application.Features.Employees.Queries.GetRolesAndEmployeeIdByUserId;
 
 namespace Employee.API.Controllers
 {
@@ -10,14 +16,14 @@ namespace Employee.API.Controllers
     [Route("api/[controller]")]
     public class EmployeeController : ControllerBase
     {
-        private readonly IEmployeeService _service;
+        private readonly IMediator _mediator;
         private readonly ILogger<EmployeeController> _logger;
 
         public EmployeeController(
-            IEmployeeService service,
+            IMediator mediator,
             ILogger<EmployeeController> logger)
         {
-            _service = service;
+            _mediator = mediator;
             _logger = logger;
         }
 
@@ -29,7 +35,14 @@ namespace Employee.API.Controllers
                 "Create employee request received for UserId: {UserId}",
                 request.UserId);
 
-            var result = await _service.CreateEmployeeAsync(request);
+            var result = await _mediator.Send(new CreateEmployeeCommand(
+                request.UserId,
+                request.FirstName,
+                request.LastName,
+                request.Department,
+                request.ManagerId,
+                request.RoleIds
+            ));
 
             _logger.LogInformation(
                 "Employee created successfully for UserId: {UserId}",
@@ -43,7 +56,7 @@ namespace Employee.API.Controllers
         {
             _logger.LogInformation("Fetching all employees");
 
-            var result = await _service.GetEmployeesAsync();
+            var result = await _mediator.Send(new GetEmployeesQuery());
 
             return Ok(result);
         }
@@ -54,16 +67,7 @@ namespace Employee.API.Controllers
         {
             _logger.LogInformation("Fetching employee by Id: {EmployeeId}", id);
 
-            var result = await _service.GetEmployeeByIdAsync(id);
-
-            if (result == null)
-            {
-                _logger.LogWarning(
-                    "Employee not found for Id: {EmployeeId}",
-                    id);
-
-                return NotFound(new { message = "Employee not found" });
-            }
+            var result = await _mediator.Send(new GetEmployeeByIdQuery(id));
 
             return Ok(result);
         }
@@ -74,16 +78,15 @@ namespace Employee.API.Controllers
         {
             _logger.LogInformation("Updating employee with Id: {EmployeeId}", id);
 
-            var result = await _service.UpdateEmployeeAsync(id, request);
-
-            if (result == null)
-            {
-                _logger.LogWarning(
-                    "Employee not found for update: {EmployeeId}",
-                    id);
-
-                return NotFound(new { message = "Employee not found" });
-            }
+            var result = await _mediator.Send(new UpdateEmployeeCommand(
+                id,
+                request.FirstName,
+                request.LastName,
+                request.Department,
+                request.IsActive,
+                request.ManagerId,
+                request.RoleIds
+            ));
 
             _logger.LogInformation("Employee updated successfully: {EmployeeId}", id);
 
@@ -96,16 +99,7 @@ namespace Employee.API.Controllers
         {
             _logger.LogInformation("Deleting employee with Id: {EmployeeId}", id);
 
-            var result = await _service.DeleteEmployeeAsync(id);
-
-            if (!result)
-            {
-                _logger.LogWarning(
-                    "Employee not found for delete: {EmployeeId}",
-                    id);
-
-                return NotFound(new { message = "Employee not found" });
-            }
+            var result = await _mediator.Send(new DeleteEmployeeCommand(id));
 
             _logger.LogInformation("Employee deleted (soft) successfully: {EmployeeId}", id);
 
@@ -120,7 +114,7 @@ namespace Employee.API.Controllers
                 "Fetching roles and employeeId for UserId: {UserId}",
                 userId);
 
-            var result = await _service.GetRolesAndEmployeeIdByUserId(userId);
+            var result = await _mediator.Send(new GetRolesAndEmployeeIdByUserIdQuery(userId));
 
             return Ok(result);
         }
@@ -133,16 +127,7 @@ namespace Employee.API.Controllers
                 "Fetching manager for EmployeeId: {EmployeeId}",
                 id);
 
-            var employee = await _service.GetEmployeeByIdAsync(id);
-
-            if (employee == null)
-            {
-                _logger.LogWarning(
-                    "Employee not found while fetching manager: {EmployeeId}",
-                    id);
-
-                return NotFound(new { message = "Employee not found" });
-            }
+            var employee = await _mediator.Send(new GetEmployeeByIdQuery(id));
 
             return Ok(new { ManagerId = employee.ManagerId });
         }

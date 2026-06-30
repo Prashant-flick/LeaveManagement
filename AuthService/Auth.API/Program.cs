@@ -30,7 +30,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
         x => x.MigrationsHistoryTable("__EFMigrationsHistory", "auth")
     ));
 
-builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
+builder.Services.AddSingleton<IJwtTokenService, JwtTokenService>();
 
 // Register MediatR
 builder.Services.AddMediatR(cfg => {

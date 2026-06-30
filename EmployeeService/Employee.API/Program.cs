@@ -1,8 +1,6 @@
-using Employee.Application.Interfaces;
 using Employee.Domain.Interfaces;
 using Employee.Infrastructure.Data;
 using Employee.Infrastructure.Repositories;
-using Employee.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
@@ -11,7 +9,6 @@ using FluentValidation;
 using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Mvc;
 using Employee.Domain.Common.Interfaces;
-using Employee.Application.Validators;
 using Employee.API.Common.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -32,17 +29,19 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
         x => x.MigrationsHistoryTable("__EFMigrationsHistory", "employee")
     ));
 
-builder.Services.AddScoped<IEmployeeService,EmployeeService>();
 builder.Services.AddScoped<IEmployeeRepository,EmployeeRepository>();
 builder.Services.AddScoped<IRoleRepository, RoleRepository>();
-builder.Services.AddScoped<IRoleService, RoleService>();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
+// Register MediatR
+builder.Services.AddMediatR(cfg => {
+    cfg.RegisterServicesFromAssembly(typeof(Employee.Application.Features.Employees.Commands.CreateEmployee.CreateEmployeeCommand).Assembly);
+    cfg.AddOpenBehavior(typeof(Employee.Application.Common.Behaviors.LoggingBehavior<,>));
+    cfg.AddOpenBehavior(typeof(Employee.Application.Common.Behaviors.ValidationBehavior<,>));
+});
+
 // Add validators
-builder.Services.AddFluentValidationAutoValidation();
-builder.Services.AddValidatorsFromAssembly(
-    typeof(CreateEmployeeRequestValidator).Assembly
-);
+builder.Services.AddValidatorsFromAssembly(typeof(Employee.Application.Features.Employees.Commands.CreateEmployee.CreateEmployeeCommand).Assembly);
 
 builder.Services.Configure<ApiBehaviorOptions>(options =>
 {
