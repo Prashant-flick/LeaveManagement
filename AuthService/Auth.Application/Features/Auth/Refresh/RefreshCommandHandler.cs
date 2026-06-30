@@ -85,7 +85,7 @@ namespace Auth.Application.Features.Auth.Refresh
             };
 
             await _refreshTokenRepository.AddRefreshTokenAsync(newRefreshTokenEntity);
-            await _unitOfWork.SaveChangesAsync();
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
 
             _logger.LogInformation("Successfully refreshed token for UserId: {UserId}", userId);
 

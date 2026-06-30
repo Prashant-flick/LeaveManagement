@@ -41,7 +41,7 @@ namespace Employee.Application.Features.Roles.Commands.CreateRole
             };
 
             await _repository.AddAsync(role);
-            await _unitOfWork.SaveChangesAsync();
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
 
             _logger.LogInformation("Role created successfully: {RoleName}", role.Name);
 

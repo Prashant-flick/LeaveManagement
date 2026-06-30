@@ -83,7 +83,7 @@ namespace Leave.Application.Features.Leaves.Commands.UpdateLeaveStatus
 
             leave.UpdatedAt = DateTime.UtcNow;
 
-            await _repository.SaveChangesAsync();
+            await _repository.SaveChangesAsync(cancellationToken);
 
             _logger.LogInformation("Leave processed by ApproverId: {ApproverId}", request.ApproverId);
             return new LeaveResponse

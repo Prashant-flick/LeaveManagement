@@ -78,7 +78,7 @@ namespace Auth.Application.Features.Auth.Login
             };
 
             await _refreshTokenRepository.AddRefreshTokenAsync(refreshTokenEntity);
-            await _unitOfWork.SaveChangesAsync();
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
 
             return new LoginResponse
             {

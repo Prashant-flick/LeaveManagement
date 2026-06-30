@@ -52,7 +52,7 @@ namespace Leave.Application.Features.LeaveBalances.Commands.CreateLeaveBalance
             };
 
             await _repository.AddBalanceAsync(balance);
-            await _repository.SaveChangesAsync();
+            await _repository.SaveChangesAsync(cancellationToken);
 
             return balance;
         }

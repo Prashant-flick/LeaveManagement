@@ -44,7 +44,7 @@ namespace Auth.Application.Features.Auth.Register
             };
 
             await _userRepository.AddAsync(user);
-            await _unitOfWork.SaveChangesAsync();
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
 
             _logger.LogInformation("User registered successfully with Id: {UserId}, Email: {Email}", user.Id, user.Email);
 

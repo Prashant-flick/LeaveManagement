@@ -13,5 +13,5 @@ public interface ILeaveRepository
 
     Task<List<LeaveRequest>> GetLeavesByEmployeeAndYear(int employeeId, int year);
 
-    Task SaveChangesAsync();
+    Task SaveChangesAsync(CancellationToken cancellationToken = default);
 }

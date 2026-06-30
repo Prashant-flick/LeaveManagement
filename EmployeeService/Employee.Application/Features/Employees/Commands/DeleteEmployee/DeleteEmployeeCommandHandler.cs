@@ -38,7 +38,7 @@ namespace Employee.Application.Features.Employees.Commands.DeleteEmployee
             employee.IsActive = false;
             employee.UpdatedAt = DateTime.UtcNow;
 
-            await _unitOfWork.SaveChangesAsync();
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
 
             _logger.LogInformation("Employee deactivated successfully: {EmployeeId}", request.Id);
 

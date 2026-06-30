@@ -71,7 +71,7 @@ namespace Employee.Application.Features.Employees.Commands.UpdateEmployee
                 await _repository.AddEmployeeRolesAsync(newRoles);
             }
 
-            await _unitOfWork.SaveChangesAsync();
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
 
             _logger.LogInformation("Employee updated successfully: {EmployeeId}", request.Id);
 

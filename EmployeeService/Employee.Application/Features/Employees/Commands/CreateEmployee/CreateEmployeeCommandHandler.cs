@@ -64,7 +64,7 @@ namespace Employee.Application.Features.Employees.Commands.CreateEmployee
                 await _repository.AddEmployeeRolesAsync(roles);
             }
 
-            await _unitOfWork.SaveChangesAsync();
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
 
             _logger.LogInformation("Employee created successfully with Id: {EmployeeId}", employee.Id);
 

@@ -84,7 +84,7 @@ namespace Leave.Application.Features.Leaves.Commands.CreateLeave
             };
 
             await _repository.AddLeaveAsync(leave);
-            await _repository.SaveChangesAsync();
+            await _repository.SaveChangesAsync(cancellationToken);
 
             _logger.LogInformation("Leave created successfully for EmployeeId: {EmployeeId}", request.EmployeeId);
             return new LeaveResponse

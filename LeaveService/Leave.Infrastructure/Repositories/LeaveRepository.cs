@@ -92,13 +92,13 @@ public class LeaveRepository : ILeaveRepository
             .ToListAsync();
     }
 
-    public async Task SaveChangesAsync()
+    public async Task SaveChangesAsync(CancellationToken cancellationToken = default)
     {
         _logger.LogInformation("Saving changes to database");
 
         try
         {
-            var result = await _context.SaveChangesAsync();
+            var result = await _context.SaveChangesAsync(cancellationToken);
 
             _logger.LogInformation("Database save successful. Rows affected: {RowCount}", result);
         }
