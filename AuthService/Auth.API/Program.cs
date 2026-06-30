@@ -7,12 +7,10 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Auth.Domain.Interfaces;
 using Auth.Infrastructure.Repository;
-using FluentValidation.AspNetCore;
 using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 using Auth.Domain.Common.Interfaces;
 using Auth.API.Common.Middleware;
-using Auth.Application.Validators;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Configuration.AddJsonFile("appsettings.local.json", optional: true, reloadOnChange: true);
@@ -34,7 +32,9 @@ builder.Services.AddSingleton<IJwtTokenService, JwtTokenService>();
 
 // Register MediatR
 builder.Services.AddMediatR(cfg => {
-    cfg.RegisterServicesFromAssembly(typeof(Auth.Application.Features.Auth.Commands.RegisterCommand).Assembly);
+    cfg.RegisterServicesFromAssembly(typeof(Auth.Application.Features.Auth.Login.LoginCommand).Assembly);
+    cfg.AddOpenBehavior(typeof(Auth.Application.Common.Behaviors.LoggingBehavior<,>));
+    cfg.AddOpenBehavior(typeof(Auth.Application.Common.Behaviors.ValidationBehavior<,>));
 });
 
 builder.Services.AddScoped<IUserRepository, UserRepository>();
@@ -42,8 +42,7 @@ builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
 
 // Add validators
-builder.Services.AddFluentValidationAutoValidation();
-builder.Services.AddValidatorsFromAssemblyContaining<LoginRequestValidator>();
+builder.Services.AddValidatorsFromAssembly(typeof(Auth.Application.Features.Auth.Login.LoginCommand).Assembly);
 
 // for better error response for validators
 builder.Services.Configure<ApiBehaviorOptions>(options =>

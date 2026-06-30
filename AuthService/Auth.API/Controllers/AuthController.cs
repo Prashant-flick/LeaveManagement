@@ -2,7 +2,9 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using MediatR;
-using Auth.Application.Features.Auth.Commands;
+using Auth.Application.Features.Auth.Login;
+using Auth.Application.Features.Auth.Register;
+using Auth.Application.Features.Auth.Refresh;
 
 namespace Auth.API.Controllers
 {

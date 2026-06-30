@@ -4,8 +4,9 @@ using Auth.Domain.Common.Interfaces;
 using Auth.Domain.Entities;
 using Auth.Domain.Interfaces;
 using Microsoft.Extensions.Logging;
+using Auth.Application.DTOs;
 
-namespace Auth.Application.Features.Auth.Commands
+namespace Auth.Application.Features.Auth.Register
 {
     public class RegisterCommandHandler : IRequestHandler<RegisterCommand, RegisterResponse>
     {
@@ -25,8 +26,6 @@ namespace Auth.Application.Features.Auth.Commands
 
         public async Task<RegisterResponse> Handle(RegisterCommand request, CancellationToken cancellationToken)
         {
-            _logger.LogInformation("Register attempt for Email: {Email}", request.Email);
-
             var existingUser = await _userRepository.GetByEmailAsync(request.Email);
 
             if (existingUser != null)

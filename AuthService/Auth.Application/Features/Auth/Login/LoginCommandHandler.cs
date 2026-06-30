@@ -5,8 +5,9 @@ using Auth.Domain.Common.Interfaces;
 using Auth.Domain.Entities;
 using Auth.Domain.Interfaces;
 using Microsoft.Extensions.Logging;
+using Auth.Application.DTOs;
 
-namespace Auth.Application.Features.Auth.Commands
+namespace Auth.Application.Features.Auth.Login
 {
     public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResponse>
     {
@@ -35,8 +36,6 @@ namespace Auth.Application.Features.Auth.Commands
 
         public async Task<LoginResponse> Handle(LoginCommand request, CancellationToken cancellationToken)
         {
-            _logger.LogInformation("Login attempt for Email: {Email}", request.Email);
-
             var user = await _userRepository.GetByEmailAsync(request.Email);
 
             if (user == null)

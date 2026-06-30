@@ -5,8 +5,9 @@ using Auth.Domain.Common.Interfaces;
 using Auth.Domain.Entities;
 using Auth.Domain.Interfaces;
 using Microsoft.Extensions.Logging;
+using Auth.Application.DTOs;
 
-namespace Auth.Application.Features.Auth.Commands
+namespace Auth.Application.Features.Auth.Refresh
 {
     public class RefreshCommandHandler : IRequestHandler<RefreshCommand, LoginResponse>
     {
@@ -19,24 +20,22 @@ namespace Auth.Application.Features.Auth.Commands
 
         public RefreshCommandHandler(
             IUserRepository userRepository, 
-            ILogger<RefreshCommandHandler> _logger, 
-            IJwtTokenService _jwtService,
-            IEmployeeClient _employeeClient,
-            IRefreshTokenRepository _refreshTokenRepository,
-            IUnitOfWork _unitOfWork)
+            ILogger<RefreshCommandHandler> logger, 
+            IJwtTokenService jwtService,
+            IEmployeeClient employeeClient,
+            IRefreshTokenRepository refreshTokenRepository,
+            IUnitOfWork unitOfWork)
         {
-            this._userRepository = userRepository;
-            this._logger = _logger;
-            this._jwtService = _jwtService;
-            this._employeeClient = _employeeClient;
-            this._refreshTokenRepository = _refreshTokenRepository;
-            this._unitOfWork = _unitOfWork;
+            _userRepository = userRepository;
+            _logger = logger;
+            _jwtService = jwtService;
+            _employeeClient = employeeClient;
+            _refreshTokenRepository = refreshTokenRepository;
+            _unitOfWork = unitOfWork;
         }
 
         public async Task<LoginResponse> Handle(RefreshCommand request, CancellationToken cancellationToken)
         {
-            _logger.LogInformation("Refresh token attempt.");
-
             var savedRefreshToken = await _refreshTokenRepository.GetRefreshTokenAsync(request.RefreshToken);
             if (savedRefreshToken == null)
             {
