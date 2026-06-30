@@ -11,9 +11,13 @@ using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 using Auth.Domain.Common.Interfaces;
 using Auth.API.Common.Middleware;
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Configuration.AddJsonFile("appsettings.local.json", optional: true, reloadOnChange: true);
+
+builder.Host.UseSerilog((context, configuration) => 
+    configuration.ReadFrom.Configuration(context.Configuration));
 
 // ✅ Add Controllers (IMPORTANT)
 builder.Services.AddControllers();

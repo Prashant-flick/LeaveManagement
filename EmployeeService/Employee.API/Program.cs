@@ -10,9 +10,13 @@ using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Mvc;
 using Employee.Domain.Common.Interfaces;
 using Employee.API.Common.Middleware;
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Configuration.AddJsonFile("appsettings.local.json", optional: true, reloadOnChange: true);
+
+builder.Host.UseSerilog((context, configuration) => 
+    configuration.ReadFrom.Configuration(context.Configuration));
 
 // Add services to the container.
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
