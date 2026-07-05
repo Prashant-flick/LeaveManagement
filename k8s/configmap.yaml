@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: leave-config
+  namespace: default
+data:
+  # DB Initialization Strategies
+  DatabaseSettings__InitStrategy: "Update"
+  
+  # Microservice endpoints (Internal Kubernetes DNS routing)
+  EmployeeService__BaseUrl: "http://employee-service"
+  
+  # JWT parameters
+  Jwt__Issuer: "AuthService"
+  Jwt__Audience: "EmployeeLeaveServices"
+  Jwt__ExpiryMinutes: "60"

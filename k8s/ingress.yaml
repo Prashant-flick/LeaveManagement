@@ -1,0 +1,46 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: leave-ingress
+  namespace: default
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    nginx.ingress.kubernetes.io/use-regex: "true"
+spec:
+  ingressClassName: nginx
+  rules:
+    - http:
+        paths:
+          # Route for Authentication Service
+          - path: /api/auth
+            pathType: Prefix
+            backend:
+              service:
+                name: auth-service
+                port:
+                  number: 80
+                  
+          # Routes for Employee Service
+          - path: /api/employee
+            pathType: Prefix
+            backend:
+              service:
+                name: employee-service
+                port:
+                  number: 80
+          - path: /api/role
+            pathType: Prefix
+            backend:
+              service:
+                name: employee-service
+                port:
+                  number: 80
+
+          # Routes for Leave Service (matches both /api/leave and /api/leavebalance)
+          - path: /api/leave
+            pathType: Prefix
+            backend:
+              service:
+                name: leave-service
+                port:
+                  number: 80
