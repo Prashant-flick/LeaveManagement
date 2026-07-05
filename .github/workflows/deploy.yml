@@ -1,0 +1,63 @@
+name: CD - Manual Deploy to Azure AKS
+
+on:
+  workflow_dispatch: # Allows manual triggering from the GitHub Actions UI
+
+env:
+  # TODO: Replace with 'leaveacrprashant' or your custom ACR name
+  ACR_NAME: "leaveacrprashant" 
+  RESOURCE_GROUP: "LeaveManagementIndiaRG"
+  AKS_CLUSTER_NAME: "leave-aks"
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      # 1. Checkout codebase
+      - name: Checkout Source Code
+        uses: actions/checkout@v3
+
+      # 2. Authenticate with Azure (using Service Principal)
+      - name: Log in to Azure
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      # 3. Set AKS Context
+      - name: Set AKS Context (kubeconfig)
+        uses: azure/aks-set-context-action@v3
+        with:
+          resource-group: ${{ env.RESOURCE_GROUP }}
+          cluster-name: ${{ env.AKS_CLUSTER_NAME }}
+
+      # 4. Apply manifests to Kubernetes (AKS)
+      - name: Deploy Kubernetes Manifests
+        run: |
+          # Apply shared ConfigMaps and Secrets
+          kubectl apply -f k8s/configmap.yaml
+          kubectl apply -f k8s/secrets.yaml
+          
+          # Apply Persistent Storage and Postgres DB
+          kubectl apply -f k8s/postgres-pvc.yaml
+          kubectl apply -f k8s/postgres-deploy.yaml
+          
+          # Apply Microservices (pointing to :latest images)
+          kubectl apply -f k8s/auth-service.yaml
+          kubectl apply -f k8s/employee-service.yaml
+          kubectl apply -f k8s/leave-service.yaml
+          
+          # Apply Ingress Gateway routing rules
+          kubectl apply -f k8s/ingress.yaml
+
+      # 5. Force Rollout Update
+      - name: Restart Deployments to Pull New Images
+        run: |
+          # Since manifests use ':latest', we force AKS to restart the pods to fetch the newly built images
+          kubectl rollout restart deployment/auth-service
+          kubectl rollout restart deployment/employee-service
+          kubectl rollout restart deployment/leave-service
+          
+          # Wait for the rollout to complete successfully
+          kubectl rollout status deployment/auth-service
+          kubectl rollout status deployment/employee-service
+          kubectl rollout status deployment/leave-service

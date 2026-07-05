@@ -1,0 +1,67 @@
+name: Auto-Generate Learning Note
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  generate-note:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2 # Fetch the last 2 commits to get the diff
+
+      - name: Setup AWS CLI
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-south-1
+
+      - name: Generate Note from Git Diff
+        run: |
+          COMMIT_MSG=$(git log -1 --pretty=%B | head -n 1)
+          COMMIT_HASH=$(git rev-parse --short HEAD)
+          DATE=$(date +'%Y-%m-%d')
+          FILENAME="auto-commit-${COMMIT_HASH}.md"
+          
+          # Get list of changed files
+          CHANGED_FILES=$(git diff-tree --no-commit-id --name-only -r HEAD)
+          
+          # Generate markdown content
+          cat <<EOF > $FILENAME
+          # 🔧 $DATE — Auto-Changelog: $COMMIT_HASH
+          
+          **Date:** $DATE
+          **Tags:** auto-generated, changelog
+          
+          ## Commit Message
+          > $COMMIT_MSG
+          
+          ## Changed Files
+          \`\`\`text
+          $CHANGED_FILES
+          \`\`\`
+          EOF
+          
+          echo "Generated note: $FILENAME"
+          
+          # Upload the new note to S3
+          aws s3 cp $FILENAME s3://prashant-learning-notes-content/notes/
+          
+          # Download, update, and re-upload the index
+          aws s3 cp s3://prashant-learning-notes-content/notes-index.json .
+          
+          # Use jq to append the new note to the index
+          jq --arg id "commit-$COMMIT_HASH" \
+             --arg title "Auto-Changelog: $COMMIT_HASH" \
+             --arg filename "$FILENAME" \
+             --arg date "$DATE" \
+             --arg desc "Code changes for: $COMMIT_MSG" \
+             '.notes += [{"id": $id, "title": $title, "filename": $filename, "category": "changelog", "tags": ["auto-generated", "changelog"], "date": $date, "description": $desc}]' \
+             notes-index.json > notes-index-updated.json
+             
+          # Upload the updated index back to S3
+          aws s3 cp notes-index-updated.json s3://prashant-learning-notes-content/notes-index.json

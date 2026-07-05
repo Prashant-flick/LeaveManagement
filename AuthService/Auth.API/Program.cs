@@ -94,7 +94,8 @@ builder.Services.AddAuthentication(options =>
 // adding client
 builder.Services.AddHttpClient<IEmployeeClient, EmployeeClient>(client =>
 {
-    client.BaseAddress = new Uri("http://localhost:5001");
+    var baseUrl = builder.Configuration["EmployeeService:BaseUrl"] ?? "http://localhost:5001";
+    client.BaseAddress = new Uri(baseUrl);
 }); 
 
 // ✅ Authorization

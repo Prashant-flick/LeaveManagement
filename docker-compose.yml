@@ -1,0 +1,69 @@
+services:
+  # 1. Database Service
+  postgres-db:
+    image: postgres:15-alpine
+    container_name: local-postgres-db
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: employeeleave
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: Prashant1251@
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  # 2. Authentication Service
+  auth-service:
+    build:
+      context: ./AuthService
+      dockerfile: Dockerfile
+    container_name: local-auth-service
+    ports:
+      - "5000:80"
+    depends_on:
+      - postgres-db
+    environment:
+      ConnectionStrings__DefaultConnection: "Host=postgres-db;Port=5432;Database=employeeleave;Username=postgres;Password=Prashant1251@"
+      DatabaseSettings__InitStrategy: "Update" # Run EF Core migrations on start
+      EmployeeService__BaseUrl: "http://employee-service"
+      Jwt__Key: "THIS_IS_A_SECRET_KEY_CHANGE_IT_MY_SECRET_KEY"
+      Jwt__Issuer: "AuthService"
+      Jwt__Audience: "EmployeeLeaveServices"
+      Jwt__ExpiryMinutes: "60"
+
+  # 3. Employee Service
+  employee-service:
+    build:
+      context: ./EmployeeService
+      dockerfile: Dockerfile
+    container_name: local-employee-service
+    ports:
+      - "5001:80"
+    depends_on:
+      - postgres-db
+    environment:
+      ConnectionStrings__DefaultConnection: "Host=postgres-db;Port=5432;Database=employeeleave;Username=postgres;Password=Prashant1251@"
+      DatabaseSettings__InitStrategy: "Update"
+
+  # 4. Leave Service
+  leave-service:
+    build:
+      context: ./LeaveService
+      dockerfile: Dockerfile
+    container_name: local-leave-service
+    ports:
+      - "5002:80"
+    depends_on:
+      - postgres-db
+      - employee-service
+    environment:
+      ConnectionStrings__DefaultConnection: "Host=postgres-db;Port=5432;Database=employeeleave;Username=postgres;Password=Prashant1251@"
+      DatabaseSettings__InitStrategy: "Update"
+      EmployeeService__BaseUrl: "http://employee-service"
+      Jwt__Key: "THIS_IS_A_SECRET_KEY_CHANGE_IT_MY_SECRET_KEY"
+      Jwt__Issuer: "AuthService"
+      Jwt__Audience: "EmployeeLeaveServices"
+      Jwt__ExpiryMinutes: "60"
+
+volumes:
+  postgres_data:

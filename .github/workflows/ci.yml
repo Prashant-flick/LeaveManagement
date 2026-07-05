@@ -1,0 +1,58 @@
+name: CI - Build and Push Images
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'AuthService/**'
+      - 'EmployeeService/**'
+      - 'LeaveService/**'
+      - '.github/workflows/ci.yml'
+
+env:
+  # TODO: Replace with 'leaveacrprashant' or your custom ACR name
+  ACR_NAME: "leaveacrprashant" 
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      # 1. Checkout codebase
+      - name: Checkout Source Code
+        uses: actions/checkout@v3
+
+      # 2. Authenticate with Azure (using Service Principal)
+      - name: Log in to Azure
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      # 3. Log in to Azure Container Registry (ACR)
+      - name: Log in to ACR
+        run: |
+          az acr login --name ${{ env.ACR_NAME }}
+
+      # 4. Build and Push AuthService Image
+      - name: Build & Push Auth Service Image
+        run: |
+          docker build \
+            -t ${{ env.ACR_NAME }}.azurecr.io/auth-service:latest \
+            -f AuthService/Dockerfile AuthService
+          docker push ${{ env.ACR_NAME }}.azurecr.io/auth-service:latest
+
+      # 5. Build and Push EmployeeService Image
+      - name: Build & Push Employee Service Image
+        run: |
+          docker build \
+            -t ${{ env.ACR_NAME }}.azurecr.io/employee-service:latest \
+            -f EmployeeService/Dockerfile EmployeeService
+          docker push ${{ env.ACR_NAME }}.azurecr.io/employee-service:latest
+
+      # 6. Build and Push LeaveService Image
+      - name: Build & Push Leave Service Image
+        run: |
+          docker build \
+            -t ${{ env.ACR_NAME }}.azurecr.io/leave-service:latest \
+            -f LeaveService/Dockerfile LeaveService
+          docker push ${{ env.ACR_NAME }}.azurecr.io/leave-service:latest

@@ -56,3 +56,18 @@ secrets.json
 ## Ignore Publish output
 publish/
 **/[bin|obj]/publish/
+
+## Ignore Frontend / Node.js
+node_modules/
+dist/
+dist-ssr/
+*.local
+.npm/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+## Ignore AWS / Temp Files
+aws/
+awscliv2.zip
+notes-index-updated.json
