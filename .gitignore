@@ -71,3 +71,6 @@ yarn-error.log*
 aws/
 awscliv2.zip
 notes-index-updated.json
+
+/jop-apply
+/job-apply

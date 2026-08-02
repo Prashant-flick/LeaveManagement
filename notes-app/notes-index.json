@@ -2,10 +2,14 @@
   "notes": [
     {
       "id": "architecture",
-      "title": "Clean Architecture — LeaveManagement",
+      "title": "Clean Architecture \u2014 LeaveManagement",
       "filename": "ARCHITECTURE.md",
-      "category": "guide",
-      "tags": ["architecture", "clean-architecture", "dotnet"],
+      "category": "architecture",
+      "tags": [
+        "architecture",
+        "clean-architecture",
+        "dotnet"
+      ],
       "date": "2026-06-14",
       "description": "Complete breakdown of the Clean Architecture pattern used in the LeaveManagement microservices project."
     },
@@ -13,8 +17,13 @@
       "id": "mediator-pattern",
       "title": "Mediator Pattern with MediatR",
       "filename": "MEDIATOR_PATTERN_GUIDE.md",
-      "category": "guide",
-      "tags": ["design-patterns", "mediatr", "cqrs", "dotnet"],
+      "category": "backend",
+      "tags": [
+        "design-patterns",
+        "mediatr",
+        "cqrs",
+        "dotnet"
+      ],
       "date": "2026-06-20",
       "description": "How the Mediator pattern decouples request handling using MediatR and CQRS in .NET."
     },
@@ -22,8 +31,13 @@
       "id": "jwt-auth-flow",
       "title": "JWT Authentication Flow",
       "filename": "JWT_AUTH_FLOW.md",
-      "category": "guide",
-      "tags": ["jwt", "authentication", "security", "dotnet"],
+      "category": "security",
+      "tags": [
+        "jwt",
+        "authentication",
+        "security",
+        "dotnet"
+      ],
       "date": "2026-06-26",
       "description": "End-to-end JWT access token and refresh token authentication flow."
     },
@@ -31,8 +45,12 @@
       "id": "developer-workflow",
       "title": "Developer Workflow Guide",
       "filename": "DEVELOPER_WORKFLOW_GUIDE.md",
-      "category": "guide",
-      "tags": ["workflow", "git", "development"],
+      "category": "devops",
+      "tags": [
+        "workflow",
+        "git",
+        "development"
+      ],
       "date": "2026-06-28",
       "description": "Step-by-step developer onboarding and workflow guide for the LeaveManagement project."
     },
@@ -40,8 +58,14 @@
       "id": "azure-deployment",
       "title": "Azure Deployment Architecture",
       "filename": "azure_deployment_architecture.md",
-      "category": "guide",
-      "tags": ["azure", "kubernetes", "docker", "aks", "deployment"],
+      "category": "cloud",
+      "tags": [
+        "azure",
+        "kubernetes",
+        "docker",
+        "aks",
+        "deployment"
+      ],
       "date": "2026-07-05",
       "description": "Full deployment architecture for deploying .NET microservices to Azure AKS with CI/CD pipelines."
     },
@@ -50,9 +74,119 @@
       "title": "Building a Retro Notes Website with S3 and AI",
       "filename": "building-retro-notes-website.md",
       "category": "frontend",
-      "tags": ["react", "aws", "s3", "automation", "ai", "architecture"],
+      "tags": [
+        "react",
+        "aws",
+        "s3",
+        "automation",
+        "ai",
+        "architecture"
+      ],
       "date": "2026-07-06",
       "description": "How we built a serverless retro arcade notes website using React, S3 static hosting, and dual automation pipelines."
+    },
+    {
+      "id": "pipeline-behaviors",
+      "title": "MediatR Pipeline Behaviors Comparison",
+      "filename": "pipeline_behaviors_comparison.md",
+      "category": "backend",
+      "tags": [
+        "mediatr",
+        "pipeline",
+        "dotnet"
+      ],
+      "date": "2026-07-06",
+      "description": "Comparison of different MediatR pipeline behaviors."
+    },
+    {
+      "id": "architecture-v2",
+      "title": "Architecture V2",
+      "filename": "architecture_v2.md",
+      "category": "architecture",
+      "tags": [
+        "architecture",
+        "dotnet"
+      ],
+      "date": "2026-07-06",
+      "description": "Updated version 2 of the LeaveManagement architecture."
+    },
+    {
+      "id": "architecture-comparison",
+      "title": "Architecture Comparison",
+      "filename": "architecture_comparison.md",
+      "category": "architecture",
+      "tags": [
+        "architecture",
+        "comparison"
+      ],
+      "date": "2026-07-06",
+      "description": "Comparison between different architecture patterns."
+    },
+    {
+      "id": "k8s-cheatsheet",
+      "title": "Kubernetes Developer Cheatsheet",
+      "filename": "k8s_cheatsheet.md",
+      "category": "devops",
+      "tags": [
+        "kubernetes",
+        "k8s",
+        "kubectl",
+        "cheatsheet"
+      ],
+      "date": "2026-07-05",
+      "description": "Critical kubectl and az CLI lookup reference commands."
+    },
+    {
+      "id": "deployment-analysis",
+      "title": "Azure Deployment Analysis",
+      "filename": "deployment_analysis.md",
+      "category": "cloud",
+      "tags": [
+        "azure",
+        "kubernetes",
+        "aks"
+      ],
+      "date": "2026-07-04",
+      "description": "Analysis of the Azure AKS deployment strategy."
+    },
+    {
+      "id": "notes-website-analysis",
+      "title": "Notes Website Architecture Analysis",
+      "filename": "notes_website_analysis.md",
+      "category": "architecture",
+      "tags": [
+        "aws",
+        "s3",
+        "react",
+        "architecture"
+      ],
+      "date": "2026-07-06",
+      "description": "Architecture analysis for the retro-themed notes website on AWS."
+    },
+    {
+      "id": "daily-job-matches",
+      "title": "Daily Job Aggregator",
+      "filename": "daily-job-matches.md",
+      "category": "career",
+      "tags": [
+        "jobs",
+        "automation",
+        "career"
+      ],
+      "date": "2026-07-23",
+      "description": "Daily updated feed of the top 10 job matches from RemoteOK."
+    },
+    {
+      "id": "career-jobs",
+      "title": "My Job Radar (5-Day History)",
+      "filename": "career-jobs.md",
+      "category": "career",
+      "tags": [
+        "jobs",
+        "automation"
+      ],
+      "date": "2026-07-23",
+      "description": "Daily updated feed of the top 20 job matches aggregated from Instahyre and RemoteOK."
     }
   ]
 }
