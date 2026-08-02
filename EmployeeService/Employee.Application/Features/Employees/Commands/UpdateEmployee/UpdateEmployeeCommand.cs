@@ -11,6 +11,9 @@ namespace Employee.Application.Features.Employees.Commands.UpdateEmployee
         string? Department,
         bool? IsActive,
         int? ManagerId,
-        List<int>? RoleIds
+        List<int>? RoleIds,
+        int CurrentUserId,
+        int CurrentEmployeeId,
+        List<string> CurrentUserRoles
     ) : IRequest<EmployeeResponse>;
 }

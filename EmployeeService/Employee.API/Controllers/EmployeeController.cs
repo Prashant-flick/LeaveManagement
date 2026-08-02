@@ -2,6 +2,7 @@ using Employee.Application.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MediatR;
+using System.Security.Claims;
 using Employee.Application.Features.Employees.Commands.CreateEmployee;
 using Employee.Application.Features.Employees.Commands.DeleteEmployee;
 using Employee.Application.Features.Employees.Commands.UpdateEmployee;
@@ -29,7 +30,7 @@ namespace Employee.API.Controllers
 
         [HttpPost]
         [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> Create(CreateEmployeeRequest request)
+        public async Task<IActionResult> Create([FromBody] CreateEmployeeRequest request)
         {
             _logger.LogInformation(
                 "Create employee request received for UserId: {UserId}",
@@ -73,10 +74,14 @@ namespace Employee.API.Controllers
         }
 
         [HttpPut("{id}")]
-        [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> Update(int id, UpdateEmployeeRequest request)
+        [Authorize(Roles = "Admin,Employee,Manager")]
+        public async Task<IActionResult> Update(int id, [FromBody] UpdateEmployeeRequest request)
         {
             _logger.LogInformation("Updating employee with Id: {EmployeeId}", id);
+
+            var currentUserId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "0");
+            var currentEmployeeId = int.Parse(User.FindFirstValue("EmployeeId") ?? "0");
+            var currentUserRoles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
 
             var result = await _mediator.Send(new UpdateEmployeeCommand(
                 id,
@@ -85,7 +90,10 @@ namespace Employee.API.Controllers
                 request.Department,
                 request.IsActive,
                 request.ManagerId,
-                request.RoleIds
+                request.RoleIds,
+                currentUserId,
+                currentEmployeeId,
+                currentUserRoles
             ));
 
             _logger.LogInformation("Employee updated successfully: {EmployeeId}", id);

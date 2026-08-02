@@ -19,10 +19,10 @@ builder.Configuration.AddJsonFile("appsettings.local.json", optional: true, relo
 builder.Host.UseSerilog((context, configuration) => 
     configuration.ReadFrom.Configuration(context.Configuration));
 
-// ✅ Add Controllers (IMPORTANT)
+// Add Controllers
 builder.Services.AddControllers();
 
-// ✅ Swagger
+// Swagger
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
@@ -67,7 +67,7 @@ builder.Services.Configure<ApiBehaviorOptions>(options =>
     };
 });
 
-// ✅ JWT Authentication
+// JWT Authentication
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
